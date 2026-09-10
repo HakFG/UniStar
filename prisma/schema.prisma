@@ -8,13 +8,47 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  nome      String
-  bio       String?
-  avatarUrl String?
-  bannerUrl String?
-  pontuacao Int      @default(0)
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  username      String   @unique
+  password      String
+  nome          String
+  bio           String?
+  avatarUrl     String?
+  bannerUrl     String?
+  pontuacao     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  animesCriados Anime[]
+}
+
+model Anime {
+  id              String   @id @default(cuid())
+  tipo            TipoIp   @default(GUIA_TEMPORADA)
+
+  titulo          String
+  tituloImgUrl    String?
+  capaUrl         String
+
+  sinopse         String?
+  estudio         String?
+  diretor         String?
+  characterDesign String?
+  compositor      String?
+  adaptador       String?
+  notasNandao     String?
+  trailerUrl      String?
+
+  temporada       String
+  ordem           Int      @default(0)
+
+  criadoPorId     String
+  criadoPor       User     @relation(fields: [criadoPorId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum TipoIp {
+  GUIA_TEMPORADA
+  CONTINUACAO_REMAKE
 }

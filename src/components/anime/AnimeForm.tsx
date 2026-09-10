@@ -1,0 +1,169 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import type { Anime } from "@prisma/client";
+import { SINOPSE_MAX_CHARS, CURRENT_SEASON } from "@/lib/constants";
+
+interface Props {
+  mode: "create" | "edit";
+  initialData?: Anime;
+  onSubmit: (formData: FormData) => Promise<void>;
+}
+
+export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
+  const [sinopse, setSinopse] = useState(initialData?.sinopse ?? "");
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      await onSubmit(fd);
+    });
+  }
+
+  const inputCls =
+    "w-full rounded-lg bg-base/60 border border-white/10 focus:border-accent outline-none px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/50 transition-colors";
+  const labelCls =
+    "block font-heading font-semibold text-xs uppercase tracking-wider text-text-secondary mb-1.5";
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {/* Título */}
+      <div>
+        <label className={labelCls} htmlFor="titulo">Título *</label>
+        <input
+          id="titulo"
+          name="titulo"
+          required
+          defaultValue={initialData?.titulo ?? ""}
+          className={inputCls}
+          placeholder="Ex: Frieren"
+        />
+      </div>
+
+      {/* URL do PNG do título */}
+      <div>
+        <label className={labelCls} htmlFor="tituloImgUrl">
+          URL do PNG do título (opcional)
+        </label>
+        <input
+          id="tituloImgUrl"
+          name="tituloImgUrl"
+          defaultValue={initialData?.tituloImgUrl ?? ""}
+          className={inputCls}
+          placeholder="https://... (deixe vazio para usar texto)"
+        />
+      </div>
+
+      {/* Capa */}
+      <div>
+        <label className={labelCls} htmlFor="capaUrl">URL da capa *</label>
+        <input
+          id="capaUrl"
+          name="capaUrl"
+          required
+          defaultValue={initialData?.capaUrl ?? ""}
+          className={inputCls}
+          placeholder="https://..."
+        />
+      </div>
+
+      {/* Sinopse */}
+      <div>
+        <label className={labelCls} htmlFor="sinopse">
+          Sinopse ({sinopse.length}/{SINOPSE_MAX_CHARS})
+        </label>
+        <textarea
+          id="sinopse"
+          name="sinopse"
+          rows={5}
+          maxLength={SINOPSE_MAX_CHARS}
+          value={sinopse}
+          onChange={(e) => setSinopse(e.target.value)}
+          className={inputCls + " resize-none"}
+          placeholder="Resumo do anime..."
+        />
+      </div>
+
+      {/* Staff */}
+      <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <legend className={labelCls}>Staff</legend>
+
+        {[
+          { name: "estudio", label: "Estúdio" },
+          { name: "diretor", label: "Diretor" },
+          { name: "characterDesign", label: "Character Design" },
+          { name: "compositor", label: "Compositor" },
+          { name: "adaptador", label: "Adaptador" },
+        ].map((f) => (
+          <div key={f.name}>
+            <label className={labelCls} htmlFor={f.name}>{f.label}</label>
+            <input
+              id={f.name}
+              name={f.name}
+              defaultValue={
+                (initialData as Record<string, unknown> | undefined)?.[
+                  f.name
+                ] as string | undefined ?? ""
+              }
+              className={inputCls}
+            />
+          </div>
+        ))}
+      </fieldset>
+
+      {/* Notas do Nandão */}
+      <div>
+        <label className={labelCls} htmlFor="notasNandao">Notas do Nandão</label>
+        <textarea
+          id="notasNandao"
+          name="notasNandao"
+          rows={4}
+          defaultValue={initialData?.notasNandao ?? ""}
+          className={inputCls + " resize-none"}
+          placeholder="Comentário livre sobre a produção..."
+        />
+      </div>
+
+      {/* Trailer */}
+      <div>
+        <label className={labelCls} htmlFor="trailerUrl">URL do trailer (YouTube)</label>
+        <input
+          id="trailerUrl"
+          name="trailerUrl"
+          defaultValue={initialData?.trailerUrl ?? ""}
+          className={inputCls}
+          placeholder="https://youtube.com/watch?v=..."
+        />
+      </div>
+
+      {/* Temporada */}
+      <div>
+        <label className={labelCls} htmlFor="temporada">Temporada *</label>
+        <input
+          id="temporada"
+          name="temporada"
+          required
+          defaultValue={initialData?.temporada ?? CURRENT_SEASON}
+          className={inputCls}
+        />
+      </div>
+
+      {/* Botões */}
+      <div className="flex justify-end gap-3 pt-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-full bg-accent hover:bg-accent/90 text-base font-heading font-semibold px-6 py-2.5 text-sm transition-colors disabled:opacity-50"
+        >
+          {pending
+            ? "Salvando..."
+            : mode === "create"
+              ? "Criar Anime"
+              : "Salvar Alterações"}
+        </button>
+      </div>
+    </form>
+  );
+}

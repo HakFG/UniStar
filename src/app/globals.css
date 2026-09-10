@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-base: #0b0d17;
+  --color-aurora-purple: #5b2a86;
+  --color-aurora-teal: #1b4b5a;
+  --color-aurora-magenta: #b23a6e;
+  --color-text-primary: #f1f0f5;
+  --color-text-secondary: #a9a6b8;
+  --color-accent: #5fd4d0;
+  --color-surface: rgba(20, 18, 32, 0.55);
+
+  --font-heading: var(--font-space-grotesk), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Aurora ─────────────────────────── */
+@keyframes aurora-blob-1 {
+  0%   { transform: translate(-10%, -10%) scale(1); }
+  33%  { transform: translate(15%, 10%) scale(1.15); }
+  66%  { transform: translate(-5%, 20%) scale(0.95); }
+  100% { transform: translate(-10%, -10%) scale(1); }
+}
+@keyframes aurora-blob-2 {
+  0%   { transform: translate(10%, 15%) scale(1); }
+  40%  { transform: translate(-15%, -5%) scale(1.1); }
+  70%  { transform: translate(5%, -20%) scale(0.9); }
+  100% { transform: translate(10%, 15%) scale(1); }
+}
+@keyframes aurora-blob-3 {
+  0%   { transform: translate(0%, 0%) scale(1); }
+  50%  { transform: translate(-20%, 10%) scale(1.2); }
+  100% { transform: translate(0%, 0%) scale(1); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.aurora-blob-1 { animation: aurora-blob-1 28s ease-in-out infinite; }
+.aurora-blob-2 { animation: aurora-blob-2 34s ease-in-out infinite; }
+.aurora-blob-3 { animation: aurora-blob-3 40s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob-1,
+  .aurora-blob-2,
+  .aurora-blob-3 { animation: none !important; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Utilitários ─────────────────────── */
+.scrollbar-hidden::-webkit-scrollbar { display: none; }
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+.snap-carousel {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-carousel > * { scroll-snap-align: start; }
