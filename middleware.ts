@@ -1,26 +1,32 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const ROTAS_PROTEGIDAS = [
-  "/perfil",
-  "/apostas",
-];
-
+const ROTAS_PROTEGIDAS = ["/perfil", "/apostas"];
 const ROTAS_EDITOR = [
   "/animes-da-temporada/novo",
   "/continuacoes-remakes/novo",
 ];
 
-export default auth((req) => {
+// Nomes dos cookies de sessão do NextAuth v5
+// (varia entre dev e prod)
+const COOKIE_NAMES = [
+  "authjs.session-token",
+  "__Secure-authjs.session-token",
+];
+
+function temSessao(req: NextRequest): boolean {
+  return COOKIE_NAMES.some((name) => req.cookies.has(name));
+}
+
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isLoggedIn = !!req.auth;
+  const isLoggedIn = temSessao(req);
 
   // /login: se já logado, redireciona pra home
   if (pathname === "/login" && isLoggedIn) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // Rotas que exigem login
   const precisaLogin =
     ROTAS_PROTEGIDAS.some((r) => pathname.startsWith(r)) ||
     ROTAS_EDITOR.some((r) => pathname.startsWith(r)) ||
@@ -33,11 +39,8 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: [
-    // Ignora arquivos estáticos e rotas internas do Next
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
