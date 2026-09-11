@@ -3,6 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
+export async function resetarTudo() {
+  await prisma.aposta.deleteMany();
+  await prisma.resultadoCategoria.deleteMany();
+  await prisma.user.updateMany({ data: { pontuacao: 0 } });
+
+  revalidatePath("/apostas");
+  revalidatePath("/perfil");
+  revalidatePath("/");
+}
+
 export async function setAposta(
   categoriaId: string,
   username: string,
