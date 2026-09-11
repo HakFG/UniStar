@@ -25,17 +25,7 @@ export default async function AnimesDaTemporadaPage() {
         </div>
 
         <AnimeHero animes={animes} />
-
-        {animes.length === 0 ? (
-          <div className="text-center py-16 text-text-secondary">
-            <p className="mb-1">Nenhum anime cadastrado ainda.</p>
-            <p className="text-sm">
-              Ative o Modo Editor no topo e clique em &quot;+ Adicionar Anime&quot;.
-            </p>
-          </div>
-        ) : (
-          <AnimeGrid animes={animes} />
-        )}
+        <AnimeGrid animes={animes} />
       </div>
     </main>
   );

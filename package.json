@@ -2,13 +2,14 @@
   "name": "unistar",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate"
-  },
+"scripts": {
+  "dev": "next dev",
+  "build": "prisma generate && next build",
+  "start": "next start",
+  "lint": "eslint",
+  "postinstall": "prisma generate",
+  "reset": "tsx scripts/reset.ts"
+},
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "framer-motion": "^13.2.0",

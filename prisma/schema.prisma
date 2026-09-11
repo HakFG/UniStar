@@ -8,22 +8,25 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  username      String   @unique
+  id            String      @id @default(cuid())
+  username      String      @unique
   password      String
   nome          String
   bio           String?
   avatarUrl     String?
   bannerUrl     String?
-  pontuacao     Int      @default(0)
-  createdAt     DateTime @default(now())
+  pontuacao     Int         @default(0)
+  createdAt     DateTime    @default(now())
 
   animesCriados Anime[]
+  previsoes     Previsao[]
+  apostas       Aposta[]
+  badges        UserBadge[]
 }
 
 model Anime {
-  id              String   @id @default(cuid())
-  tipo            TipoIp   @default(GUIA_TEMPORADA)
+  id              String                @id @default(cuid())
+  tipo            TipoIp                @default(GUIA_TEMPORADA)
 
   titulo          String
   tituloImgUrl    String?
@@ -39,16 +42,102 @@ model Anime {
   trailerUrl      String?
 
   temporada       String
-  ordem           Int      @default(0)
+  ordem           Int                   @default(0)
 
   criadoPorId     String
-  criadoPor       User     @relation(fields: [criadoPorId], references: [id])
+  criadoPor       User                  @relation(fields: [criadoPorId], references: [id])
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  previsoes       Previsao[]
+  apostas         Aposta[]
+  resultados      ResultadoCategoria[]
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
+
+model Previsao {
+  id        String   @id @default(cuid())
+  animeId   String
+  anime     Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  data      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([animeId, userId])
+}
+
+model Categoria {
+  id         String                @id @default(cuid())
+  slug       String                @unique
+  nome       String
+  ordem      Int                   @default(0)
+  tipo       TipoCategoria         @default(CATEGORICA)
+  apostas    Aposta[]
+  resultados ResultadoCategoria[]
+}
+
+model Aposta {
+  id            String     @id @default(cuid())
+  categoriaId   String
+  categoria     Categoria  @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  animeId       String?
+  anime         Anime?     @relation(fields: [animeId], references: [id], onDelete: SetNull)
+  valorNumerico Float?
+  watched       Boolean    @default(true)
+  pontos        Int?
+  temporada     String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([categoriaId, userId, temporada])
+}
+
+model ResultadoCategoria {
+  id            String    @id @default(cuid())
+  categoriaId   String
+  categoria     Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  temporada     String
+  animeId       String?
+  anime         Anime?    @relation(fields: [animeId], references: [id], onDelete: SetNull)
+  valorNumerico Float?
+  fechadoEm     DateTime  @default(now())
+
+  @@unique([categoriaId, temporada])
+}
+
+model Badge {
+  id        String      @id @default(cuid())
+  slug      String      @unique
+  nome      String
+  descricao String?
+  imagemUrl String
+  ordem     Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  users     UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  ganhoEm  DateTime @default(now())
+
+  @@unique([userId, badgeId])
 }
 
 enum TipoIp {
   GUIA_TEMPORADA
   CONTINUACAO_REMAKE
+}
+
+enum TipoCategoria {
+  CATEGORICA
+  NUMERICA
 }
