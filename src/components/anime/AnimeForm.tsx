@@ -76,12 +76,19 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         placeholder="https://... (deixe vazio para usar texto)"
       />
 
-      <ImageUploadInput
-        name="capaUrl"
-        label="Capa"
-        defaultValue={initialData?.capaUrl}
-        required
-      />
+<ImageUploadInput
+  name="capaUrl"
+  label="Capa"
+  defaultValue={initialData?.capaUrl}
+  required
+/>
+
+<ImageUploadInput
+  name="bannerUrl"
+  label="Banner (opcional — imagem wide pra hero da página)"
+  defaultValue={initialData?.bannerUrl}
+  placeholder="https://... (deixe vazio pra usar a capa no hero)"
+/>
 
       <div>
         <label className={labelCls} htmlFor="sinopse">
@@ -161,7 +168,6 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
           id="temporada"
           name="temporada"
           required
-          defaultValue={initialData?.temporada ?? CURRENT_SEASON}
           className={inputCls}
         />
       </div>

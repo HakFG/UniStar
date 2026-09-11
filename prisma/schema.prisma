@@ -32,6 +32,8 @@ model Anime {
   titulo          String
   tituloImgUrl    String?
   capaUrl         String
+  bannerUrl       String?               
+
 
   sinopse         String?
   estudio         String?
@@ -141,4 +143,12 @@ enum TipoIp {
 enum TipoCategoria {
   CATEGORICA
   NUMERICA
+}
+
+model Temporada {
+  id        String   @id @default(cuid())
+  nome      String   @unique  // "Outono 2026"
+  ordem     Int      @unique  // ordenação cronológica (202601, 202602, ...)
+  isAtual   Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

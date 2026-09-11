@@ -2,13 +2,27 @@ import Header from "@/components/layout/Header";
 import AnimeGrid from "@/components/anime/AnimeGrid";
 import AnimeHero from "@/components/anime/AnimeHero";
 import { prisma } from "@/lib/prisma";
-import { CURRENT_SEASON } from "@/lib/constants";
 
 export default async function AnimesDaTemporadaPage() {
+  // Busca TODOS os animes guia (sem filtro de temporada)
+  // A ordenação coloca temporada mais recente primeiro, depois por ordem
   const animes = await prisma.anime.findMany({
-    where: { temporada: CURRENT_SEASON },
-    orderBy: [{ ordem: "asc" }, { createdAt: "desc" }],
+    where: { tipo: "GUIA_TEMPORADA" },
+    orderBy: [{ temporada: "desc" }, { ordem: "asc" }, { createdAt: "desc" }],
   });
+
+  // Agrupa por temporada
+  const porTemporada = new Map<string, typeof animes>();
+  for (const a of animes) {
+    const lista = porTemporada.get(a.temporada) ?? [];
+    lista.push(a);
+    porTemporada.set(a.temporada, lista);
+  }
+
+  // Ordena os grupos pela temporada mais recente primeiro
+  const grupos = Array.from(porTemporada.entries()).sort((a, b) =>
+    b[0].localeCompare(a[0])
+  );
 
   return (
     <main className="min-h-screen">
@@ -20,12 +34,15 @@ export default async function AnimesDaTemporadaPage() {
             Animes da Temporada
           </h1>
           <p className="text-text-secondary text-xs sm:text-sm mt-1">
-            {CURRENT_SEASON}
+            Todas as temporadas cadastradas
           </p>
         </div>
 
+        {/* Hero continua usando o anime mais recente */}
         <AnimeHero animes={animes} />
-        <AnimeGrid animes={animes} />
+
+        {/* Grade agrupada por temporada */}
+        <AnimeGrid grupos={grupos} />
       </div>
     </main>
   );

@@ -14,6 +14,7 @@ function parseForm(formData: FormData) {
     titulo: get("titulo"),
     tituloImgUrl: get("tituloImgUrl") || null,
     capaUrl: get("capaUrl"),
+    bannerUrl: get("bannerUrl") || null,       // ← NOVO
     sinopse: get("sinopse") || null,
     estudio: get("estudio") || null,
     diretor: get("diretor") || null,

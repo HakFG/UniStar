@@ -25,3 +25,6 @@ export const GRUPO_USERS = [
   { username: "heitor", nome: "Heitor" },
 ] as const;
 
+export const ADMIN_LINKS = [
+  { href: "/admin/temporadas", label: "Gerenciar Temporadas" },
+] as const;

@@ -1,11 +1,11 @@
-import type { Anime } from "@prisma/client";
+﻿import type { Anime } from "@prisma/client";
 
-const FIELDS: { key: keyof Anime; label: string }[] = [
-  { key: "estudio", label: "Estúdio" },
-  { key: "diretor", label: "Diretor" },
-  { key: "characterDesign", label: "Character Design" },
-  { key: "compositor", label: "Compositor" },
-  { key: "adaptador", label: "Adaptador" },
+const FIELDS: { key: keyof Anime; label: string; icon: string }[] = [
+  { key: "estudio",        label: "Estudio",          icon: "🏢" },
+  { key: "diretor",        label: "Direcao",          icon: "🎬" },
+  { key: "characterDesign",label: "Character Design", icon: "✏️" },
+  { key: "compositor",     label: "Composicao",       icon: "🎵" },
+  { key: "adaptador",      label: "Adaptacao",        icon: "📖" },
 ];
 
 export default function AnimeStaffCard({ anime }: { anime: Anime }) {
@@ -13,22 +13,45 @@ export default function AnimeStaffCard({ anime }: { anime: Anime }) {
   if (!hasAny) return null;
 
   return (
-    <div className="rounded-2xl bg-surface backdrop-blur-md border border-white/10 p-5">
-      <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-secondary mb-3">
-        Staff
-      </h3>
-      <ul className="flex flex-col gap-1.5 text-sm">
-        {FIELDS.map((f) => {
-          const value = anime[f.key];
-          if (!value) return null;
-          return (
-            <li key={String(f.key)} className="flex gap-2">
-              <span className="text-text-secondary shrink-0">{f.label}:</span>
-              <span className="text-text-primary">{String(value)}</span>
-            </li>
-          );
-        })}
-      </ul>
+    <div className="rounded-2xl overflow-hidden border border-white/10 shadow-lg shadow-black/30 relative">
+      {/* Gradiente de fundo no topo do card */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(160deg, rgba(91,42,134,0.18) 0%, rgba(27,75,90,0.10) 50%, transparent 100%)",
+        }}
+      />
+      <div className="relative bg-surface/80 backdrop-blur-md p-5">
+        {/* Titulo com linha decorativa */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-4 rounded-full bg-gradient-to-b from-accent to-aurora-magenta shrink-0" />
+          <h3 className="font-heading font-bold text-xs uppercase tracking-widest text-text-secondary">
+            Staff
+          </h3>
+        </div>
+
+        <ul className="flex flex-col gap-3">
+          {FIELDS.map((f) => {
+            const value = anime[f.key];
+            if (!value) return null;
+            return (
+              <li key={String(f.key)} className="flex items-start gap-2.5 group/item">
+                {/* Icone */}
+                <span className="text-sm mt-0.5 shrink-0 opacity-70">{f.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-wider text-text-secondary font-heading font-semibold mb-0.5">
+                    {f.label}
+                  </p>
+                  <p className="text-sm text-text-primary leading-snug">
+                    {String(value)}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

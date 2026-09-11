@@ -1,34 +1,29 @@
 import Header from "@/components/layout/Header";
 import ApostasGrid from "@/components/aposta/ApostasGrid";
-import LiderCard from "@/components/aposta/LiderCard";
+import ApostasHeader from "@/components/aposta/ApostasHeader";
 import { prisma } from "@/lib/prisma";
-import { CURRENT_SEASON, DEFAULT_USERNAME } from "@/lib/constants";
+import { getTemporadaAtual } from "@/lib/temporadas";
 
 export default async function ApostasPage() {
+  const temporadaAtual = await getTemporadaAtual();
+
   const [categorias, animesDisponiveis, users] = await Promise.all([
     prisma.categoria.findMany({
       orderBy: { ordem: "asc" },
       include: {
         apostas: {
-          where: { temporada: CURRENT_SEASON },
+          where: { temporada: temporadaAtual },
           include: { anime: true, user: true },
         },
-        resultados: { where: { temporada: CURRENT_SEASON } },
+        resultados: { where: { temporada: temporadaAtual } },
       },
     }),
     prisma.anime.findMany({
-      where: { tipo: "GUIA_TEMPORADA", temporada: CURRENT_SEASON },
+      where: { tipo: "GUIA_TEMPORADA", temporada: temporadaAtual },
       orderBy: [{ ordem: "asc" }, { createdAt: "desc" }],
     }),
-    prisma.user.findMany({ orderBy: { username: "asc" } }),
+    prisma.user.findMany({ orderBy: { pontuacao: "desc" } }),
   ]);
-
-  const lider = users.reduce((best, u) =>
-    u.pontuacao > best.pontuacao ? u : best
-  );
-
-  // Por enquanto, admin = Nandão (até o Sistema de Contas entrar)
-  const isAdmin = true; // sempre true; o botão só aparece pro Nandão de qualquer forma
 
   const categoriasFormatadas = categorias.map((c) => {
     const resultado = c.resultados[0] ?? null;
@@ -47,6 +42,15 @@ export default async function ApostasPage() {
     };
   });
 
+  // Passa os 3 primeiros para o bloco lateral (podio + lider)
+  const top3 = users.slice(0, 3).map((u) => ({
+    id: u.id,
+    nome: u.nome,
+    username: u.username,
+    pontuacao: u.pontuacao,
+    avatarUrl: u.avatarUrl,
+  }));
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -57,21 +61,21 @@ export default async function ApostasPage() {
             Apostas dos Donos
           </h1>
           <p className="text-text-secondary text-sm sm:text-base mt-2">
-            {CURRENT_SEASON}
+            {temporadaAtual}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6 lg:gap-10 items-start">
           <div className="lg:sticky lg:top-24">
-            <LiderCard lider={lider} />
+            <ApostasHeader top3={top3} />
           </div>
 
           <div>
             <ApostasGrid
               categorias={categoriasFormatadas}
               animesDisponiveis={animesDisponiveis}
-              temporada={CURRENT_SEASON}
-              isAdmin={isAdmin}
+              temporada={temporadaAtual}
+              isAdmin={true}
             />
           </div>
         </div>

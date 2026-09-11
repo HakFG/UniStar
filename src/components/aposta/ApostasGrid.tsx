@@ -2,6 +2,7 @@
 
 import type { Anime } from "@prisma/client";
 import CategoriaCard from "./CategoriaCard";
+import { motion } from "framer-motion";
 
 interface Categoria {
   id: string;
@@ -18,15 +19,10 @@ interface Props {
   isAdmin: boolean;
 }
 
-export default function ApostasGrid({
-  categorias,
-  animesDisponiveis,
-  temporada,
-  isAdmin,
-}: Props) {
+export default function ApostasGrid({ categorias, animesDisponiveis, temporada, isAdmin }: Props) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-      {categorias.map((c) => (
+      {categorias.map((c, idx) => (
         <CategoriaCard
           key={c.id}
           categoriaId={c.id}
@@ -37,6 +33,7 @@ export default function ApostasGrid({
           temporada={temporada}
           resultado={c.resultado}
           isAdmin={isAdmin}
+          index={idx}
         />
       ))}
     </div>

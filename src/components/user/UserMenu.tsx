@@ -68,6 +68,18 @@ export default function UserMenu() {
             </p>
           </div>
 
+          {session.user.username === "nandao" && (
+  <>
+    <Link
+      href="/admin/temporadas"
+      onClick={() => setOpen(false)}
+      className="block px-4 py-2.5 text-sm text-text-primary hover:bg-white/5 transition-colors"
+    >
+      ⚙️ Temporadas
+    </Link>
+  </>
+)}
+
           <Link
             href={`/perfil/${session.user.username}`}
             onClick={() => setOpen(false)}

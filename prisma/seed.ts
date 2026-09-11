@@ -53,6 +53,27 @@ async function main() {
       create: b,
     });
   }
+
+  // ─── Temporadas ──────────────────────────────
+  // ordem = ano * 100 + trimestre (1=Inverno, 2=Primavera, 3=Verão, 4=Outono)
+  const temporadas = [
+    { nome: "Inverno 2026",   ordem: 202601, isAtual: true  },
+    { nome: "Primavera 2026", ordem: 202602, isAtual: false },
+    { nome: "Verão 2026",     ordem: 202603, isAtual: false },
+    { nome: "Outono 2026",    ordem: 202604, isAtual: false },
+    { nome: "Inverno 2027",   ordem: 202701, isAtual: false },
+    { nome: "Primavera 2027", ordem: 202702, isAtual: false },
+    { nome: "Verão 2027",     ordem: 202703, isAtual: false },
+    { nome: "Outono 2027",    ordem: 202704, isAtual: false },
+  ];
+
+  for (const t of temporadas) {
+    await prisma.temporada.upsert({
+      where: { nome: t.nome },
+      update: { ordem: t.ordem },
+      create: t,
+    });
+  }
 }
 
 main()
