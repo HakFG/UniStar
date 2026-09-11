@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteRemake } from "@/app/continuacoes-remakes/actions";
+import { resetarTudo } from "@/app/apostas/actions";
 import { useToast } from "@/components/ui/ToastProvider";
-import { isRedirectError } from "@/lib/is-redirect-error";
 
-export default function DeleteRemakeButton({
-  id,
-  titulo,
-}: {
-  id: string;
-  titulo: string;
-}) {
+export default function ResetButton() {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const { success, error: toastError } = useToast();
@@ -19,12 +12,12 @@ export default function DeleteRemakeButton({
   function handleConfirm() {
     startTransition(async () => {
       try {
-        await deleteRemake(id);
-        success(`"${titulo}" excluído`, "Removido da lista.");
+        await resetarTudo();
+        success("Tudo resetado", "Apostas, resultados e pontuação zerados.");
+        setOpen(false);
       } catch (err) {
-        if (isRedirectError(err)) return;
         toastError(
-          "Não deu pra excluir",
+          "Não deu pra resetar",
           err instanceof Error ? err.message : "Tente novamente."
         );
       }
@@ -35,34 +28,28 @@ export default function DeleteRemakeButton({
     <>
       <button
         type="button"
-        aria-label={`Excluir ${titulo}`}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(true);
-        }}
-        className="w-8 h-8 rounded-full bg-base/85 backdrop-blur-sm border border-white/10 hover:border-red-400 flex items-center justify-center text-sm text-text-primary hover:text-red-400 transition-colors"
+        onClick={() => setOpen(true)}
+        className="rounded-full border border-white/10 px-3 py-1.5 text-[10px] sm:text-xs font-heading font-semibold text-text-secondary hover:text-red-400 hover:border-red-400/60 transition-colors"
       >
-        🗑
+        🧹 Resetar Apostas
       </button>
 
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!pending) setOpen(false);
-          }}
+          onClick={() => !pending && setOpen(false)}
         >
           <div
             className="w-full max-w-md rounded-2xl bg-surface backdrop-blur-md border border-white/10 p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-heading font-bold text-lg mb-2">
-              Excluir &quot;{titulo}&quot;?
+              Resetar tudo?
             </h3>
             <p className="text-text-secondary text-sm mb-6">
-              Essa ação não pode ser desfeita.
+              Isso vai apagar <strong>todas as apostas</strong>, todos os
+              resultados registrados e zerar a pontuação dos 3. Os animes
+              cadastrados continuam intactos.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -79,7 +66,7 @@ export default function DeleteRemakeButton({
                 disabled={pending}
                 className="rounded-full bg-red-500/90 hover:bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50"
               >
-                {pending ? "Excluindo..." : "Excluir"}
+                {pending ? "Resetando..." : "Resetar"}
               </button>
             </div>
           </div>

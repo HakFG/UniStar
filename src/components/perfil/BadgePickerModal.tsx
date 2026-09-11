@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import type { Badge } from "@prisma/client";
-import { atribuirBadge, removerBadge, criarBadge } from "@/app/perfil/actions";
+import {
+  atribuirBadge,
+  removerBadge,
+  criarBadge,
+} from "@/app/perfil/actions";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Props {
   username: string;
@@ -19,11 +24,24 @@ export default function BadgePickerModal({
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<"atribuir" | "criar">("atribuir");
+  const { success, error: toastError } = useToast();
 
-  function toggle(badgeId: string, tem: boolean) {
+  function toggle(badgeId: string, tem: boolean, nome: string) {
     startTransition(async () => {
-      if (tem) await removerBadge(username, badgeId);
-      else await atribuirBadge(username, badgeId);
+      try {
+        if (tem) {
+          await removerBadge(username, badgeId);
+          success("Badge removida", `${nome} saiu do perfil.`);
+        } else {
+          await atribuirBadge(username, badgeId);
+          success("Badge atribuída!", `${nome} adicionada.`);
+        }
+      } catch (err) {
+        toastError(
+          "Não deu pra atualizar",
+          err instanceof Error ? err.message : "Tente novamente."
+        );
+      }
     });
   }
 
@@ -31,9 +49,18 @@ export default function BadgePickerModal({
     e.preventDefault();
     const form = e.currentTarget;
     const fd = new FormData(form);
+
     startTransition(async () => {
-      await criarBadge(fd);
-      form.reset();
+      try {
+        await criarBadge(fd);
+        form.reset();
+        success("Badge criada!", "Aparece agora pra todo mundo.");
+      } catch (err) {
+        toastError(
+          "Não deu pra criar",
+          err instanceof Error ? err.message : "Tente novamente."
+        );
+      }
     });
   }
 
@@ -94,7 +121,7 @@ export default function BadgePickerModal({
                       <button
                         key={b.id}
                         type="button"
-                        onClick={() => toggle(b.id, tem)}
+                        onClick={() => toggle(b.id, tem, b.nome)}
                         disabled={pending}
                         className="group text-left transition-transform hover:scale-[1.02] disabled:opacity-50"
                       >
@@ -130,15 +157,29 @@ export default function BadgePickerModal({
             <form onSubmit={handleCriar} className="p-6 flex flex-col gap-4">
               <div>
                 <label className={labelCls}>Nome *</label>
-                <input name="nome" required className={inputCls} placeholder="Ex: Mestre dos Magos" />
+                <input
+                  name="nome"
+                  required
+                  className={inputCls}
+                  placeholder="Ex: Mestre dos Magos"
+                />
               </div>
               <div>
                 <label className={labelCls}>URL da imagem (quadrada) *</label>
-                <input name="imagemUrl" required className={inputCls} placeholder="https://..." />
+                <input
+                  name="imagemUrl"
+                  required
+                  className={inputCls}
+                  placeholder="https://..."
+                />
               </div>
               <div>
                 <label className={labelCls}>Descrição</label>
-                <input name="descricao" className={inputCls} placeholder="Como se ganha essa badge" />
+                <input
+                  name="descricao"
+                  className={inputCls}
+                  placeholder="Como se ganha essa badge"
+                />
               </div>
               <div className="flex justify-end">
                 <button

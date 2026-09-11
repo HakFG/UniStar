@@ -1,87 +1,35 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import { DEFAULT_USERNAME, GRUPO_USERS } from "@/lib/constants";
-
-const STORAGE_KEY = "unistar:current-user";
-
-type Username = (typeof GRUPO_USERS)[number]["username"];
-
-interface UserInfo {
-  username: string;
-  nome: string;
-  avatarUrl: string | null;
-}
+import { useSession } from "next-auth/react";
 
 interface CurrentUserValue {
-  username: Username;
-  nome: string;
-  avatarUrl: string | null;
-  users: UserInfo[];
-  setUsername: (u: Username) => void;
+  username: string | null;
+  nome: string | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
-const CurrentUserContext = createContext<CurrentUserValue | null>(null);
+/**
+ * Hook que expõe o usuário logado de forma simples.
+ * Internamente usa a session do NextAuth — os componentes que consomem
+ * não precisam saber disso.
+ */
+export function useCurrentUser(): CurrentUserValue {
+  const { data: session, status } = useSession();
 
+  return {
+    username: session?.user?.username ?? null,
+    nome: session?.user?.nome ?? null,
+    isLoading: status === "loading",
+    isAuthenticated: status === "authenticated",
+  };
+}
+
+// Stub pra não quebrar imports antigos do Provider (removido)
 export function CurrentUserProvider({
-  users,
   children,
 }: {
-  users: UserInfo[];
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
-  const [username, setUsernameState] = useState<Username>(DEFAULT_USERNAME);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY) as Username | null;
-      const valid = GRUPO_USERS.some((u) => u.username === stored);
-      if (stored && valid) setUsernameState(stored);
-    } catch {
-      /* noop */
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, username);
-    } catch {
-      /* noop */
-    }
-  }, [username, hydrated]);
-
-  const currentUser = users.find((u) => u.username === username);
-  const nome = currentUser?.nome ?? "Nandão";
-  const avatarUrl = currentUser?.avatarUrl ?? null;
-
-  return (
-    <CurrentUserContext.Provider
-      value={{
-        username,
-        nome,
-        avatarUrl,
-        users,
-        setUsername: setUsernameState,
-      }}
-    >
-      {children}
-    </CurrentUserContext.Provider>
-  );
-}
-
-export function useCurrentUser() {
-  const ctx = useContext(CurrentUserContext);
-  if (!ctx) {
-    throw new Error("useCurrentUser precisa estar em CurrentUserProvider");
-  }
-  return ctx;
+  return <>{children}</>;
 }

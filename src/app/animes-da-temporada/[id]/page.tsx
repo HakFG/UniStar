@@ -6,6 +6,30 @@ import AnimeNotesCard from "@/components/anime/AnimeNotesCard";
 import AnimeTrailerButton from "@/components/anime/AnimeTrailerButton";
 import { prisma } from "@/lib/prisma";
 
+import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const anime = await prisma.anime.findUnique({
+    where: { id },
+    select: { titulo: true, sinopse: true, capaUrl: true },
+  });
+
+  if (!anime) return { title: "Anime não encontrado · UniStar" };
+
+  return buildMetadata({
+    title: anime.titulo,
+    description: anime.sinopse?.slice(0, 160) ?? undefined,
+    image: anime.capaUrl,
+    path: `/animes-da-temporada/${id}`,
+  });
+}
+
 export default async function AnimePage({
   params,
 }: {

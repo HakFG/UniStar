@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { Anime } from "@prisma/client";
 import { registrarResultado } from "@/app/apostas/actions";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Props {
   categoriaId: string;
@@ -24,20 +25,32 @@ export default function AdminResultModal({
   const [pending, startTransition] = useTransition();
   const [selectedAnime, setSelectedAnime] = useState<string | null>(null);
   const [valorNumerico, setValorNumerico] = useState("");
+  const { success, error: toastError } = useToast();
 
   function handleConfirm() {
     startTransition(async () => {
-      if (tipo === "CATEGORICA") {
-        await registrarResultado(categoriaId, temporada, selectedAnime, null);
-      } else {
-        await registrarResultado(
-          categoriaId,
-          temporada,
-          null,
-          parseFloat(valorNumerico)
+      try {
+        if (tipo === "CATEGORICA") {
+          await registrarResultado(categoriaId, temporada, selectedAnime, null);
+        } else {
+          await registrarResultado(
+            categoriaId,
+            temporada,
+            null,
+            parseFloat(valorNumerico)
+          );
+        }
+        success(
+          "Resultado registrado!",
+          `Pontuações de ${categoriaNome} recalculadas.`
+        );
+        onClose();
+      } catch (err) {
+        toastError(
+          "Não deu pra fechar",
+          err instanceof Error ? err.message : "Tente novamente."
         );
       }
-      onClose();
     });
   }
 
@@ -66,7 +79,9 @@ export default function AdminResultModal({
                   <button
                     key={anime.id}
                     type="button"
-                    onClick={() => setSelectedAnime(isSelected ? null : anime.id)}
+                    onClick={() =>
+                      setSelectedAnime(isSelected ? null : anime.id)
+                    }
                     className={`group text-left transition-transform ${
                       isSelected ? "scale-[1.02]" : "hover:scale-[1.02]"
                     }`}

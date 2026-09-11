@@ -24,3 +24,4 @@ export const GRUPO_USERS = [
   { username: "pedrao", nome: "Pedrão" },
   { username: "heitor", nome: "Heitor" },
 ] as const;
+

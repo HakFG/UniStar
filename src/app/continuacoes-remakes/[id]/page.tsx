@@ -4,6 +4,30 @@ import Header from "@/components/layout/Header";
 import PrevisoesCard from "@/components/remake/PrevisoesCard";
 import { prisma } from "@/lib/prisma";
 
+import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const remake = await prisma.anime.findUnique({
+    where: { id },
+    select: { titulo: true, capaUrl: true },
+  });
+
+  if (!remake) return { title: "Remake não encontrado · UniStar" };
+
+  return buildMetadata({
+    title: remake.titulo,
+    description: "Continuação ou remake previsto pelo grupo",
+    image: remake.capaUrl,
+    path: `/continuacoes-remakes/${id}`,
+  });
+}
+
 export default async function RemakePage({
   params,
 }: {

@@ -7,6 +7,30 @@ import BadgesGrid from "@/components/perfil/BadgesGrid";
 import { prisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/constants";
 
+import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: { nome: true, bio: true, avatarUrl: true },
+  });
+
+  if (!user) return { title: "Perfil não encontrado · UniStar" };
+
+  return buildMetadata({
+    title: user.nome,
+    description: user.bio ?? `Perfil de ${user.nome} no UniStar`,
+    image: user.avatarUrl ?? undefined,
+    path: `/perfil/${username}`,
+  });
+}
+
 export default async function PerfilPage({
   params,
 }: {

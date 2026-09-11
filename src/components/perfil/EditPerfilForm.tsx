@@ -1,8 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { User } from "@prisma/client";
 import { atualizarPerfil } from "@/app/perfil/actions";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import ImageUploadInput from "@/components/ui/ImageUploadInput";
 
 interface Props {
   user: User;
@@ -11,13 +14,26 @@ interface Props {
 
 export default function EditPerfilForm({ user, onCancel }: Props) {
   const [pending, startTransition] = useTransition();
+  const [dirty, setDirty] = useState(false);
+  const { success, error: toastError } = useToast();
+  useUnsavedChanges(dirty);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+
     startTransition(async () => {
-      await atualizarPerfil(user.username, fd);
-      onCancel();
+      try {
+        await atualizarPerfil(user.username, fd);
+        setDirty(false);
+        success("Perfil atualizado!", "Suas mudanças foram salvas.");
+        onCancel();
+      } catch (err) {
+        toastError(
+          "Não deu pra salvar",
+          err instanceof Error ? err.message : "Tente de novo em alguns segundos."
+        );
+      }
     });
   }
 
@@ -27,14 +43,27 @@ export default function EditPerfilForm({ user, onCancel }: Props) {
     "block font-heading font-semibold text-xs uppercase tracking-wider text-text-secondary mb-1.5";
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <form
+      onSubmit={handleSubmit}
+      onInput={() => setDirty(true)}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
       <div className="sm:col-span-2">
-        <label className={labelCls} htmlFor="nome">Nome</label>
-        <input id="nome" name="nome" defaultValue={user.nome} className={inputCls} />
+        <label className={labelCls} htmlFor="nome">
+          Nome
+        </label>
+        <input
+          id="nome"
+          name="nome"
+          defaultValue={user.nome}
+          className={inputCls}
+        />
       </div>
 
       <div className="sm:col-span-2">
-        <label className={labelCls} htmlFor="bio">Bio</label>
+        <label className={labelCls} htmlFor="bio">
+          Bio
+        </label>
         <textarea
           id="bio"
           name="bio"
@@ -45,25 +74,21 @@ export default function EditPerfilForm({ user, onCancel }: Props) {
         />
       </div>
 
-      <div>
-        <label className={labelCls} htmlFor="avatarUrl">URL do avatar (PNG)</label>
-        <input
-          id="avatarUrl"
+      <div className="sm:col-span-2">
+        <ImageUploadInput
           name="avatarUrl"
-          defaultValue={user.avatarUrl ?? ""}
-          className={inputCls}
-          placeholder="https://..."
+          label="Avatar (PNG com fundo transparente)"
+          defaultValue={user.avatarUrl}
+          placeholder="https://... ou envie uma imagem"
         />
       </div>
 
-      <div>
-        <label className={labelCls} htmlFor="bannerUrl">URL do banner</label>
-        <input
-          id="bannerUrl"
+      <div className="sm:col-span-2">
+        <ImageUploadInput
           name="bannerUrl"
-          defaultValue={user.bannerUrl ?? ""}
-          className={inputCls}
-          placeholder="https://..."
+          label="Banner"
+          defaultValue={user.bannerUrl}
+          placeholder="https://... ou envie uma imagem"
         />
       </div>
 

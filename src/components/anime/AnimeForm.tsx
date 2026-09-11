@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 import type { Anime } from "@prisma/client";
 import { SINOPSE_MAX_CHARS, CURRENT_SEASON } from "@/lib/constants";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { isRedirectError } from "@/lib/is-redirect-error";
+import ImageUploadInput from "@/components/ui/ImageUploadInput";
 
 interface Props {
   mode: "create" | "edit";
@@ -13,12 +17,30 @@ interface Props {
 export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
   const [sinopse, setSinopse] = useState(initialData?.sinopse ?? "");
   const [pending, startTransition] = useTransition();
+  const [dirty, setDirty] = useState(false);
+
+  const { success, error: toastError } = useToast();
+  useUnsavedChanges(dirty);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+
     startTransition(async () => {
-      await onSubmit(fd);
+      try {
+        await onSubmit(fd);
+        setDirty(false);
+        success(
+          mode === "create" ? "Anime criado!" : "Alterações salvas!",
+          "Tudo certo com o cadastro."
+        );
+      } catch (err) {
+        if (isRedirectError(err)) return;
+        toastError(
+          "Não deu pra salvar",
+          err instanceof Error ? err.message : "Tente de novo em alguns segundos."
+        );
+      }
     });
   }
 
@@ -28,10 +50,15 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
     "block font-heading font-semibold text-xs uppercase tracking-wider text-text-secondary mb-1.5";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      {/* Título */}
+    <form
+      onSubmit={handleSubmit}
+      onInput={() => setDirty(true)}
+      className="flex flex-col gap-5"
+    >
       <div>
-        <label className={labelCls} htmlFor="titulo">Título *</label>
+        <label className={labelCls} htmlFor="titulo">
+          Título *
+        </label>
         <input
           id="titulo"
           name="titulo"
@@ -42,34 +69,20 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* URL do PNG do título */}
-      <div>
-        <label className={labelCls} htmlFor="tituloImgUrl">
-          URL do PNG do título (opcional)
-        </label>
-        <input
-          id="tituloImgUrl"
-          name="tituloImgUrl"
-          defaultValue={initialData?.tituloImgUrl ?? ""}
-          className={inputCls}
-          placeholder="https://... (deixe vazio para usar texto)"
-        />
-      </div>
+      <ImageUploadInput
+        name="tituloImgUrl"
+        label="PNG do título (opcional)"
+        defaultValue={initialData?.tituloImgUrl}
+        placeholder="https://... (deixe vazio para usar texto)"
+      />
 
-      {/* Capa */}
-      <div>
-        <label className={labelCls} htmlFor="capaUrl">URL da capa *</label>
-        <input
-          id="capaUrl"
-          name="capaUrl"
-          required
-          defaultValue={initialData?.capaUrl ?? ""}
-          className={inputCls}
-          placeholder="https://..."
-        />
-      </div>
+      <ImageUploadInput
+        name="capaUrl"
+        label="Capa"
+        defaultValue={initialData?.capaUrl}
+        required
+      />
 
-      {/* Sinopse */}
       <div>
         <label className={labelCls} htmlFor="sinopse">
           Sinopse ({sinopse.length}/{SINOPSE_MAX_CHARS})
@@ -86,10 +99,8 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* Staff */}
       <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <legend className={labelCls}>Staff</legend>
-
         {[
           { name: "estudio", label: "Estúdio" },
           { name: "diretor", label: "Diretor" },
@@ -98,14 +109,16 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
           { name: "adaptador", label: "Adaptador" },
         ].map((f) => (
           <div key={f.name}>
-            <label className={labelCls} htmlFor={f.name}>{f.label}</label>
+            <label className={labelCls} htmlFor={f.name}>
+              {f.label}
+            </label>
             <input
               id={f.name}
               name={f.name}
               defaultValue={
-                (initialData as Record<string, unknown> | undefined)?.[
+                ((initialData as Record<string, unknown> | undefined)?.[
                   f.name
-                ] as string | undefined ?? ""
+                ] as string | undefined) ?? ""
               }
               className={inputCls}
             />
@@ -113,9 +126,10 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         ))}
       </fieldset>
 
-      {/* Notas do Nandão */}
       <div>
-        <label className={labelCls} htmlFor="notasNandao">Notas do Nandão</label>
+        <label className={labelCls} htmlFor="notasNandao">
+          Notas do Nandão
+        </label>
         <textarea
           id="notasNandao"
           name="notasNandao"
@@ -126,9 +140,10 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* Trailer */}
       <div>
-        <label className={labelCls} htmlFor="trailerUrl">URL do trailer (YouTube)</label>
+        <label className={labelCls} htmlFor="trailerUrl">
+          URL do trailer (YouTube)
+        </label>
         <input
           id="trailerUrl"
           name="trailerUrl"
@@ -138,9 +153,10 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* Temporada */}
       <div>
-        <label className={labelCls} htmlFor="temporada">Temporada *</label>
+        <label className={labelCls} htmlFor="temporada">
+          Temporada *
+        </label>
         <input
           id="temporada"
           name="temporada"
@@ -150,7 +166,6 @@ export default function AnimeForm({ mode, initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* Botões */}
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="submit"

@@ -1,8 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { Anime } from "@prisma/client";
 import { GRUPO_USERS } from "@/lib/constants";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { isRedirectError } from "@/lib/is-redirect-error";
+import ImageUploadInput from "@/components/ui/ImageUploadInput";
 
 interface PrevisaoInicial {
   username: string;
@@ -23,12 +27,29 @@ export default function RemakeForm({
   onSubmit,
 }: Props) {
   const [pending, startTransition] = useTransition();
+  const [dirty, setDirty] = useState(false);
+  const { success, error: toastError } = useToast();
+  useUnsavedChanges(dirty);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+
     startTransition(async () => {
-      await onSubmit(fd);
+      try {
+        await onSubmit(fd);
+        setDirty(false);
+        success(
+          mode === "create" ? "Remake criado!" : "Alterações salvas!",
+          "Tudo certo com o cadastro."
+        );
+      } catch (err) {
+        if (isRedirectError(err)) return;
+        toastError(
+          "Não deu pra salvar",
+          err instanceof Error ? err.message : "Tente de novo em alguns segundos."
+        );
+      }
     });
   }
 
@@ -42,9 +63,15 @@ export default function RemakeForm({
     "block font-heading font-semibold text-xs uppercase tracking-wider text-text-secondary mb-1.5";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form
+      onSubmit={handleSubmit}
+      onInput={() => setDirty(true)}
+      className="flex flex-col gap-5"
+    >
       <div>
-        <label className={labelCls} htmlFor="titulo">Título *</label>
+        <label className={labelCls} htmlFor="titulo">
+          Título *
+        </label>
         <input
           id="titulo"
           name="titulo"
@@ -55,36 +82,25 @@ export default function RemakeForm({
         />
       </div>
 
-      <div>
-        <label className={labelCls} htmlFor="tituloImgUrl">
-          URL do PNG do título (opcional)
-        </label>
-        <input
-          id="tituloImgUrl"
-          name="tituloImgUrl"
-          defaultValue={initialData?.tituloImgUrl ?? ""}
-          className={inputCls}
-          placeholder="https://... (deixe vazio para usar texto)"
-        />
-      </div>
+      <ImageUploadInput
+        name="tituloImgUrl"
+        label="PNG do título (opcional)"
+        defaultValue={initialData?.tituloImgUrl}
+        placeholder="https://... (deixe vazio para usar texto)"
+      />
 
-      <div>
-        <label className={labelCls} htmlFor="capaUrl">URL da capa *</label>
-        <input
-          id="capaUrl"
-          name="capaUrl"
-          required
-          defaultValue={initialData?.capaUrl ?? ""}
-          className={inputCls}
-          placeholder="https://..."
-        />
-      </div>
+      <ImageUploadInput
+        name="capaUrl"
+        label="Capa"
+        defaultValue={initialData?.capaUrl}
+        required
+      />
 
-      {/* Previsões */}
       <fieldset className="flex flex-col gap-3">
         <legend className={labelCls}>Previsões de estreia</legend>
         <p className="text-xs text-text-secondary -mt-1 mb-1">
-          Cada integrante aposta quando o remake/continuação sai. Pode deixar em branco.
+          Cada integrante aposta quando o remake/continuação sai. Pode deixar
+          em branco.
         </p>
 
         {GRUPO_USERS.map((u) => (

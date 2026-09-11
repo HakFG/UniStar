@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_LINKS } from "@/lib/constants";
 import EditorModeToggle from "@/components/editor/EditorModeToggle";
-import UserSwitcher from "@/components/user/UserSwitcher";
+import UserMenu from "@/components/user/UserMenu";
 
 export default function Header() {
   const pathname = usePathname();
@@ -12,11 +12,18 @@ export default function Header() {
   return (
     <header className="relative z-40 border-b border-white/10">
       <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-4 px-4 sm:px-8 py-3">
+        {/* Logo pequena — círculo do header */}
         <Link
           href="/"
-          className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 bg-surface backdrop-blur-sm flex items-center justify-center font-heading font-bold text-[9px] tracking-wider text-text-primary hover:border-accent transition-colors"
+          aria-label="Ir para a Home"
+          className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 bg-surface backdrop-blur-sm flex items-center justify-center hover:border-accent transition-colors overflow-hidden"
         >
-          LOGO
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/Unistar_Logo.png"
+            alt="UniStar"
+            className="w-full h-full object-contain p-1"
+          />
         </Link>
 
         <nav className="flex-1 flex items-center justify-center gap-2 overflow-x-auto scrollbar-hidden">
@@ -40,7 +47,7 @@ export default function Header() {
 
         <div className="shrink-0 flex items-center gap-2">
           <EditorModeToggle />
-          <UserSwitcher />
+          <UserMenu />
         </div>
       </div>
     </header>

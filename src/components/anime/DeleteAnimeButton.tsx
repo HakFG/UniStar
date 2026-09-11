@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { deleteAnime } from "@/app/animes-da-temporada/actions";
+import { useToast } from "@/components/ui/ToastProvider";
+import { isRedirectError } from "@/lib/is-redirect-error";
 
 export default function DeleteAnimeButton({
   id,
@@ -12,10 +14,20 @@ export default function DeleteAnimeButton({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const { success, error: toastError } = useToast();
 
   function handleConfirm() {
     startTransition(async () => {
-      await deleteAnime(id);
+      try {
+        await deleteAnime(id);
+        success(`"${titulo}" excluído`, "Removido da grade.");
+      } catch (err) {
+        if (isRedirectError(err)) return;
+        toastError(
+          "Não deu pra excluir",
+          err instanceof Error ? err.message : "Tente novamente."
+        );
+      }
     });
   }
 
@@ -23,7 +35,7 @@ export default function DeleteAnimeButton({
     <>
       <button
         type="button"
-        aria-label="Excluir"
+        aria-label={`Excluir ${titulo}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

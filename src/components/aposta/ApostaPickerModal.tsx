@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { Anime } from "@prisma/client";
 import { setAposta } from "@/app/apostas/actions";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Props {
   categoriaId: string;
@@ -29,25 +30,42 @@ export default function ApostaPickerModal({
   const [selected, setSelected] = useState<string | null>(null);
   const [valorNumerico, setValorNumerico] = useState("");
   const [watched, setWatched] = useState(true);
+  const { success, error: toastError } = useToast();
 
   function handleConfirm() {
     startTransition(async () => {
-      if (tipo === "CATEGORICA") {
-        if (!selected) return;
-        await setAposta(categoriaId, username, temporada, selected, null, watched);
-      } else {
-        const num = parseFloat(valorNumerico);
-        if (isNaN(num)) return;
-        await setAposta(categoriaId, username, temporada, null, num, watched);
+      try {
+        if (tipo === "CATEGORICA") {
+          if (!selected) return;
+          await setAposta(categoriaId, username, temporada, selected, null, watched);
+        } else {
+          const num = parseFloat(valorNumerico);
+          if (isNaN(num)) return;
+          await setAposta(categoriaId, username, temporada, null, num, watched);
+        }
+        success("Aposta salva!", `${categoriaNome} registrada.`);
+        onClose();
+      } catch (err) {
+        toastError(
+          "Não deu pra salvar",
+          err instanceof Error ? err.message : "Tente novamente."
+        );
       }
-      onClose();
     });
   }
 
   function handleClear() {
     startTransition(async () => {
-      await setAposta(categoriaId, username, temporada, null, null, true);
-      onClose();
+      try {
+        await setAposta(categoriaId, username, temporada, null, null, true);
+        success("Aposta removida", `Você saiu de ${categoriaNome}.`);
+        onClose();
+      } catch (err) {
+        toastError(
+          "Não deu pra remover",
+          err instanceof Error ? err.message : "Tente novamente."
+        );
+      }
     });
   }
 
@@ -141,7 +159,8 @@ export default function ApostaPickerModal({
               className="w-4 h-4 accent-[#5FD4D0]"
             />
             <span className="text-xs text-text-secondary">
-              Eu assisti esse anime (se não, seus pontos de precisão caem pela metade)
+              Eu assisti esse anime (se não, seus pontos de precisão caem pela
+              metade)
             </span>
           </label>
         </div>
